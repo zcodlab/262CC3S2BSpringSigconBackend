@@ -59,19 +59,18 @@ public class AuthService {
 
     //se tiene una cuenta existente y se desea loguerse
     public AuthResponseDTO login(LoginRequestDTO request){
-        var usuario=usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(()-> new UsernameNotFoundException("Email no encontrado"));
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El email es obligatorio");
+        }
+        var usuario=usuarioRepository.findByEmail(request.getEmail().trim())
+                .orElseThrow(()-> new UsernameNotFoundException("Email no encontrado: " + request.getEmail().trim()));
 
         if(!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash()))
             throw new BadCredentialsException("Contraseña incorrecta");
 
-        List<String> modules=Collections.emptyList();
+        List<Modulo> modules=Collections.emptyList();
         if(usuario.getRol()!=null){
-            modules=moduloRepository.findByRolId(usuario.getRol().getIdRol())
-                    .stream()
-                    .map(Modulo::getDescripcion)
-                    .collect(Collectors.toList());
-
+            modules=moduloRepository.findByRolId(usuario.getRol().getIdRol());
         }
 
         var token= jwtService.generateToken(usuario,modules);

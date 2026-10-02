@@ -14,6 +14,7 @@ public class TipoDocumentoService {
     TipoDocumentoRepository tipoDocumentoRepository;
 
     public List<TipoDocumento> getTipoDocumentos(){
+
         return tipoDocumentoRepository.findAll();
     }
 }

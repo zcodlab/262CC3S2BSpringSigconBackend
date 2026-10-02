@@ -1,5 +1,6 @@
 package dsw.sigconbackend.service;
 
+import dsw.sigconbackend.model.Modulo;
 import dsw.sigconbackend.model.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -23,12 +24,12 @@ public class JwtUtil {
     @Value("3600000")     //1 hora=60 minutosx 60 segundo x 1000 milisegundos
     private long jwtExpiration;
 
-    public String generateToken(Usuario usuario, List<String> modules){
+    public String generateToken(Usuario usuario, List<Modulo> modules){
         Map<String,Object> claims = new HashMap<>();
         claims.put("personaId", usuario.getPersona().getIdPersona());
         claims.put("email",usuario.getEmail());
         claims.put("names",usuario.getPersona().getNombres());
-        claims.put("role",usuario.getRol()!=null ? usuario.getRol().getCodigo() : null);
+        claims.put("role",usuario.getRol()!=null ? usuario.getRol() : null);
         claims.put("modules",modules);
 
         return Jwts.builder()
