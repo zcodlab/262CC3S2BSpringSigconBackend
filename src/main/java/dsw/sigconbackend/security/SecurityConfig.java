@@ -38,6 +38,18 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    java.util.Map<String, Object> body = new java.util.HashMap<>();
+                    body.put("timestamp", java.time.LocalDateTime.now().toString());
+                    body.put("status", 401);
+                    body.put("error", "Unauthorized");
+                    body.put("message", "Acceso no autorizado. Debe proporcionar un token válido.");
+                    new com.fasterxml.jackson.databind.ObjectMapper().writeValue(response.getOutputStream(), body);
+                })
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
