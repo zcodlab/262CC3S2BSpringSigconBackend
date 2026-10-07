@@ -16,13 +16,13 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PersonaRequest {
-    private Long idpersona;
+    private Long idPersona;
     private String apellidoPaterno;
     private String apellidoMaterno;
     private String nombres;
     private String idSexo;
     private LocalDate fechaNacimiento;
-    private Integer idTipoDcoumento;
+    private Integer idTipoDocumento;
     private String numDocumento;
     private String direccion;
     private String telefono;
@@ -30,7 +30,7 @@ public class PersonaRequest {
 
     public static Persona toEntity(PersonaRequest personaRequest){
         Persona persona = new Persona();
-        if(personaRequest.getIdpersona()!=null && personaRequest.getIdpersona()>0)
+        if(personaRequest.getIdPersona()!=null && personaRequest.getIdPersona()>0)
             persona.setIdPersona(persona.getIdPersona());
         else
             persona.setIdPersona(null);
@@ -44,8 +44,8 @@ public class PersonaRequest {
         persona.setTelefono(personaRequest.getTelefono());
         if(personaRequest.getIdSexo()!=null)
             persona.setSexo(Sexo.builder().idSexo(personaRequest.getIdSexo()).build());
-        if(personaRequest.getIdTipoDcoumento()!=null)
-            persona.setTipoDocumento(TipoDocumento.builder().idTipoDocumento(personaRequest.getIdTipoDcoumento()).build());
+        if(personaRequest.getIdTipoDocumento()!=null)
+            persona.setTipoDocumento(TipoDocumento.builder().idTipoDocumento(personaRequest.getIdTipoDocumento()).build());
         if(personaRequest.getIdUbigeo()!=null)
             persona.setUbigeo(Ubigeo.builder().idUbigeo(personaRequest.getIdUbigeo()).build());
         return persona;
