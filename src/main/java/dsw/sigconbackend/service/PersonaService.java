@@ -68,7 +68,16 @@ public class PersonaService {
     
     @Transactional
     public void deletePersona(Long id){
-        personaRepository.deleteById(id);
-        personaRepository.flush();
+        try {
+            personaRepository.deleteById(id);
+            personaRepository.flush();
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            String detail = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+            String userFriendlyMessage = "No se puede eliminar la persona porque se encuentra registrada y referenciada en otras tablas del sistema (ej. propietario).";
+            if (detail != null && detail.contains("propietario")) {
+                userFriendlyMessage = "No se puede eliminar la persona (ID " + id + ") porque se encuentra registrada como propietario en la base de datos.";
+            }
+            throw new IllegalArgumentException(userFriendlyMessage);
+        }
     }
 }
