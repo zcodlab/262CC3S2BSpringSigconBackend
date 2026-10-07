@@ -1,6 +1,5 @@
 package dsw.sigconbackend.service;
 
-import dsw.sigconbackend.dto.NPersonasXTipoDocumento;
 import dsw.sigconbackend.dto.PersonaRequest;
 import dsw.sigconbackend.dto.PersonaResponse;
 import dsw.sigconbackend.model.Persona;
@@ -62,8 +61,5 @@ public class PersonaService {
         personaRepository.deleteById(id);
     }
 
-    public List<NPersonasXTipoDocumento> getNPersonasXTipoDocumento(){
-        return personaRepository.getNPersonasXTipoDocumento();
-    }
     
 }
