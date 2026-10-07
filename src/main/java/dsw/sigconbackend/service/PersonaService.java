@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,36 +31,44 @@ public class PersonaService {
         return PersonaResponse.fromEntities(personaRepository.findAllByOrderByIdPersonaDesc());
     }
     public PersonaResponse findPersona(Long id){
-        return PersonaResponse.fromEntity(personaRepository.findById(id).get());                
+        return personaRepository.findById(id)
+                .map(PersonaResponse::fromEntity)
+                .orElse(null);                
     }    
     public PersonaResponse findByNumdocumento(String nDocumento){
-        return PersonaResponse.fromEntity((Persona) personaRepository.findByNumDocumento(nDocumento).get(0));
+        List<Persona> list = personaRepository.findByNumDocumento(nDocumento);
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return PersonaResponse.fromEntity(list.get(0));
     }
     
+    @Transactional
     public PersonaResponse insertPersona(PersonaRequest personaRequest){
         // Reutilizamos el metodo toEntity de PersonaRequest
         Persona persona = PersonaRequest.toEntity(personaRequest);
         persona.setCreatedAt(java.time.LocalDateTime.now());
         persona.setUpdatedAt(java.time.LocalDateTime.now());
 
-        persona=personaRepository.save(persona);        
-        PersonaResponse personaResponse=PersonaResponse.fromEntity(persona);        
+        persona = personaRepository.saveAndFlush(persona);        
+        PersonaResponse personaResponse = PersonaResponse.fromEntity(persona);        
         return personaResponse;
     } 
     
+    @Transactional
     public PersonaResponse updatePersona(PersonaRequest personaRequest){
         // Reutilizamos el metodo toEntity de PersonaRequest
         Persona persona = PersonaRequest.toEntity(personaRequest);
         persona.setCreatedAt(java.time.LocalDateTime.now());
         persona.setUpdatedAt(java.time.LocalDateTime.now());
-        persona=personaRepository.save(persona);
-        PersonaResponse personaResponse=PersonaResponse.fromEntity(persona);
+        persona = personaRepository.saveAndFlush(persona);
+        PersonaResponse personaResponse = PersonaResponse.fromEntity(persona);
         return personaResponse;
     }   
     
+    @Transactional
     public void deletePersona(Long id){
         personaRepository.deleteById(id);
+        personaRepository.flush();
     }
-
-    
 }

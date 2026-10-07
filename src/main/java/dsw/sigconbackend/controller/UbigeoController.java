@@ -23,13 +23,7 @@ public class UbigeoController {
 
     @GetMapping
     public ResponseEntity<?> getUbigeo(){
-        List<Ubigeo> listaUbigeo=null;
-        try{
-            listaUbigeo=ubigeoService.getUbigeo();
-        }catch(Exception e ){
-            logger.error("Error inesperado",e);
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+        List<Ubigeo> listaUbigeo = ubigeoService.getUbigeo();
         return ResponseEntity.ok(listaUbigeo);
     }
 }

@@ -85,22 +85,36 @@ public class JwtExceptionHandlingTest {
     @Test
     public void testGlobalExceptionHandlerExpiredJwt() {
         ExpiredJwtException ex = new ExpiredJwtException(null, null, "Token expired");
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleExpiredJwtException(ex);
+        ResponseEntity<dsw.sigconbackend.util.ErrorResponse> response = globalExceptionHandler.handleExpiredJwtException(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(401, response.getBody().get("status"));
-        assertEquals("Unauthorized", response.getBody().get("error"));
-        assertEquals("El token JWT ha expirado", response.getBody().get("message"));
+        assertEquals(401, response.getBody().getStatus());
+        assertEquals("Unauthorized", response.getBody().getError());
+        assertEquals("El token JWT ha expirado", response.getBody().getMessage());
     }
 
     @Test
     public void testGlobalExceptionHandlerBadCredentials() {
         BadCredentialsException ex = new BadCredentialsException("Contraseña incorrecta");
-        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleAuthenticationException(ex);
+        ResponseEntity<dsw.sigconbackend.util.ErrorResponse> response = globalExceptionHandler.handleAuthenticationException(ex);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(401, response.getBody().get("status"));
-        assertEquals("Unauthorized", response.getBody().get("error"));
-        assertEquals("Contraseña incorrecta", response.getBody().get("message"));
+        assertEquals(401, response.getBody().getStatus());
+        assertEquals("Unauthorized", response.getBody().getError());
+        assertEquals("Contraseña incorrecta", response.getBody().getMessage());
+    }
+
+    @Test
+    public void testGlobalExceptionHandlerDataIntegrityViolationForeignKey() {
+        org.springframework.dao.DataIntegrityViolationException ex = new org.springframework.dao.DataIntegrityViolationException(
+                "could not execute statement",
+                new RuntimeException("ERROR: update or delete on table \"persona\" violates foreign key constraint \"fk_propieta_reference_persona\" on table \"propietario\"\n Detail: Key (id_persona)=(10) is still referenced from table \"propietario\".")
+        );
+        ResponseEntity<dsw.sigconbackend.util.ErrorResponse> response = globalExceptionHandler.handleDataIntegrityViolationException(ex);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(409, response.getBody().getStatus());
+        assertEquals("Conflict", response.getBody().getError());
+        assertEquals("No se puede eliminar ni modificar la persona porque está siendo referenciada por otras entidades en el sistema (por ejemplo, 'propietario').", response.getBody().getMessage());
     }
 }

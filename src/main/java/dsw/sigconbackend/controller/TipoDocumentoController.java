@@ -23,13 +23,7 @@ public class TipoDocumentoController {
 
     @GetMapping
     public ResponseEntity<?> getTipoDocumentos(){
-        List<TipoDocumento> listaTipoDocumento=null;
-        try{
-            listaTipoDocumento=tipoDocumentoService.getTipoDocumentos();
-        }catch(Exception e ){
-            logger.error("Error inesperado",e);
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+        List<TipoDocumento> listaTipoDocumento = tipoDocumentoService.getTipoDocumentos();
         return ResponseEntity.ok(listaTipoDocumento);
     }
 

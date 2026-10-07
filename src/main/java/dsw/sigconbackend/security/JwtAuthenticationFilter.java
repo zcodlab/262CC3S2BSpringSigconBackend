@@ -1,5 +1,6 @@
 package dsw.sigconbackend.security;
 
+import dsw.sigconbackend.controller.AuthController;
 import dsw.sigconbackend.model.Usuario;
 import dsw.sigconbackend.repository.UsuarioRepository;
 import dsw.sigconbackend.service.JwtUtil;
@@ -9,6 +10,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtService;
     private final UsuarioRepository usuarioRepository;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     public JwtAuthenticationFilter(
             JwtUtil jwtService,
@@ -44,6 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
         
         final String authHeader = request.getHeader("Authorization");
+        logger.info(">doFilterInternal:"+  authHeader);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;

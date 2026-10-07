@@ -23,13 +23,7 @@ public class SexoController {
 
     @GetMapping
     public ResponseEntity<?> getSexo(){
-        List<Sexo> listaSexo=null;
-        try{
-            listaSexo=sexoService.getSexo();
-        }catch(Exception e ){
-            logger.error("Error inesperado",e);
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        }
+        List<Sexo> listaSexo = sexoService.getSexo();
         return ResponseEntity.ok(listaSexo);
     }
 }
