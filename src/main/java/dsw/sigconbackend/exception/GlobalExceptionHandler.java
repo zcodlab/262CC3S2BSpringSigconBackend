@@ -63,12 +63,12 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now().toString())
-                .status(HttpStatus.CONFLICT.value())
-                .error("Conflict")
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
                 .message(userFriendlyMessage)
                 .detail(detail)
                 .build();
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(NoSuchElementException.class)

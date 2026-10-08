@@ -112,9 +112,9 @@ public class JwtExceptionHandlingTest {
         );
         ResponseEntity<dsw.sigconbackend.util.ErrorResponse> response = globalExceptionHandler.handleDataIntegrityViolationException(ex);
 
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().getStatus());
-        assertEquals("Conflict", response.getBody().getError());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(400, response.getBody().getStatus());
+        assertEquals("Bad Request", response.getBody().getError());
         assertEquals("No se puede eliminar ni modificar la persona porque está siendo referenciada por otras entidades en el sistema (por ejemplo, 'propietario').", response.getBody().getMessage());
     }
 }

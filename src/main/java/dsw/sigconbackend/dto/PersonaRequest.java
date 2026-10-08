@@ -31,7 +31,7 @@ public class PersonaRequest {
     public static Persona toEntity(PersonaRequest personaRequest){
         Persona persona = new Persona();
         if(personaRequest.getIdPersona()!=null && personaRequest.getIdPersona()>0)
-            persona.setIdPersona(persona.getIdPersona());
+            persona.setIdPersona(personaRequest.getIdPersona());
         else
             persona.setIdPersona(null);
 
