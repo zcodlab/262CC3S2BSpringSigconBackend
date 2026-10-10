@@ -4,7 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .env
-.env1
+.env-supabase-ipv4
+.env-supabase-ipv6
+.env-neon
 
 ### STS ###
 .apt_generated
