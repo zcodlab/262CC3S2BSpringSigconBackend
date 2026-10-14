@@ -23,4 +23,7 @@ public class Rol {
 
     @Column(nullable = false, unique = true)
     private String descripcion;
+
+    @Column(nullable = false, unique = false)
+    private Boolean activo;
 }
