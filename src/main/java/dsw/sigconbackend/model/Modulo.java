@@ -25,5 +25,5 @@ public class Modulo {
     private String url;
 
     @Column(nullable = false, unique = true)
-    private String activo;
+    private Boolean activo;
 }

@@ -26,7 +26,7 @@ public class RolModulo {
     private Integer idMod;
 
     @Column(nullable = false)
-    private String activo;
+    private Boolean activo;
 
     @Column(name = "created_at",nullable = true, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
