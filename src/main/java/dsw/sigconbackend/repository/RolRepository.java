@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface RolRepository extends JpaRepository<Rol, Integer> {
     @Query("select r from Rol r where r.activo = true "
-            + "and (:descripcion is null or r.descripcion like CONCAT('%', :descripcion, '%')) "
+            + "and (:descripcion is null or r.descripcion like :descripcion) "
             + "order by r.idRol desc")
     List<Rol> findByFilter(@Param("descripcion") String descripcion);
 }

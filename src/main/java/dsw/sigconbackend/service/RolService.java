@@ -21,7 +21,10 @@ public class RolService {
     RolRepository rolRepository;
 
     public List<RolResponse> list(RolRequest filter){
-        return RolResponse.fromEntities(rolRepository.findByFilter(filter.getDescripcion()));
+        String descripcion = (filter.getDescripcion() == null || filter.getDescripcion().isBlank())
+                ? null
+                : "%" + filter.getDescripcion().trim() + "%";
+        return RolResponse.fromEntities(rolRepository.findByFilter(descripcion));
     }
 
     public RolResponse find(Integer id){
