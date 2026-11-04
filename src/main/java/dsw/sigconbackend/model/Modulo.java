@@ -26,4 +26,7 @@ public class Modulo {
 
     @Column(nullable = false, unique = true)
     private Boolean activo;
+
+    @Column(name="orden_opcion", nullable = false, unique = false)
+    private Integer ordenOpcion;
 }
