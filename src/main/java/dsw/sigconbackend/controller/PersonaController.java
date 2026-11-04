@@ -1,5 +1,6 @@
 package dsw.sigconbackend.controller;
 
+import dsw.sigconbackend.dto.NPersonasXTipoDocumento;
 import dsw.sigconbackend.dto.PersonaRequest;
 import dsw.sigconbackend.dto.PersonaResponse;
 import dsw.sigconbackend.model.Persona;
@@ -136,5 +137,14 @@ public class PersonaController {
         }
         personaService.deletePersona(idPersona);                        
         return ResponseEntity.ok(personaResponse);  
+    }
+
+    @GetMapping("/NPersonasXTipoDocumento")
+    public ResponseEntity<?> getNPersonasXTipoDocumento(){
+        List<NPersonasXTipoDocumento> listaNPersonasXTipoDocumento = personaService.getNPersonasXTipoDocumento();
+        if (listaNPersonasXTipoDocumento.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.builder().status(404).error("Not Found").message("PersonasXTipoDocumento not found").build());
+        return ResponseEntity.ok(listaNPersonasXTipoDocumento);
     }
 }
