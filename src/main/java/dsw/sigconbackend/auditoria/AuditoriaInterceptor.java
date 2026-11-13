@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.UUID;
 
 /**
@@ -18,10 +20,20 @@ import java.util.UUID;
  * request y lo limpia al finalizar, garantizando que no haya fugas de datos
  * entre hilos.
  *
+ * <p>La IP de origen se obtiene <strong>exclusivamente</strong> de
+ * {@link jakarta.servlet.http.HttpServletRequest#getRemoteAddr()}, que refleja
+ * la dirección TCP real de la conexión entrante. El header
+ * {@code X-Forwarded-For} enviado por el cliente <em>no</em> se lee porque
+ * puede ser falsificado (spoofing). Si en el futuro el sistema se despliega
+ * detrás de un proxy/load-balancer de confianza (nginx, AWS ALB, etc.), la
+ * forma correcta de propagar la IP real es configurar
+ * {@code ForwardedHeaderFilter} con la lista de proxies confiables en el
+ * servidor, no confiar en el header enviado por el cliente.</p>
+ *
  * <p>Extrae del {@link SecurityContextHolder}:
  * <ul>
  *   <li>ID del usuario autenticado (0 si es anónimo)</li>
- *   <li>IP de origen del cliente</li>
+ *   <li>IP de origen del cliente (normalizada de IPv6 a IPv4 cuando aplica)</li>
  *   <li>Método HTTP y endpoint</li>
  *   <li>Un UUID de correlación único por request</li>
  * </ul>
@@ -54,22 +66,18 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
             AuditoriaContext.setIdUsuario(0L);
         }
 
-        // 3. IP de origen (considera proxies X-Forwarded-For)
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank()) {
-            ip = request.getRemoteAddr();
-        } else {
-            // X-Forwarded-For puede contener una lista "ip1, ip2, ..."
-            ip = ip.split(",")[0].trim();
-        }
+        // 3. IP de origen — solo se confía en la dirección TCP real de la conexión.
+        //    El header X-Forwarded-For NO se lee desde el cliente porque puede
+        //    ser falsificado. Si hay un proxy de confianza, configurar
+        //    ForwardedHeaderFilter en el servidor con la lista de proxies permitidos.
+        String ip = normalizarIp(request.getRemoteAddr());
 
-        // Si la IP es loopback (::1 / 127.0.0.1), el cliente y el servidor están
-        // en la misma máquina. En ese caso intentamos obtener la IP de red local
-        // del servidor como referencia. Para obtener la IP real del cliente remoto,
-        // el frontend debe enviar el header X-Forwarded-For o acceder por IP de red.
+        // Si la IP es loopback (::1 / 127.0.0.1) el cliente y el servidor están
+        // en la misma máquina (entorno de desarrollo). Se registra la IP de red
+        // local del servidor solo como referencia.
         if ("::1".equals(ip) || "127.0.0.1".equals(ip)) {
             try {
-                String localIp = java.net.InetAddress.getLocalHost().getHostAddress();
+                String localIp = InetAddress.getLocalHost().getHostAddress();
                 ip = localIp + " (loopback→local)";
             } catch (java.net.UnknownHostException e) {
                 // Dejar la ip loopback tal cual si falla la resolución
@@ -92,6 +100,47 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
                 AuditoriaContext.getIdUsuario(), ip, request.getRequestURI());
 
         return true;
+    }
+
+    /**
+     * Normaliza una dirección IP a su forma más legible.
+     * <ul>
+     *   <li>IPv6 mapeada a IPv4 ({@code ::ffff:x.x.x.x}) → devuelve la parte IPv4.</li>
+     *   <li>Elimina el sufijo de zona ({@code %eth0}) si existe.</li>
+     *   <li>Para cualquier otra IPv6 intenta resolverla mediante {@link InetAddress};
+     *       si el resultado es una Inet4Address la devuelve como cadena IPv4.</li>
+     * </ul>
+     *
+     * @param ip dirección IP cruda proveniente del request
+     * @return dirección normalizada
+     */
+    private String normalizarIp(String ip) {
+        if (ip == null || ip.isBlank()) return ip;
+
+        // Eliminar sufijo de zona IPv6 (ej. "fe80::1%lo0")
+        int zonaIdx = ip.indexOf('%');
+        if (zonaIdx != -1) {
+            ip = ip.substring(0, zonaIdx);
+        }
+
+        // IPv6 mapeada a IPv4: "::ffff:x.x.x.x" o "0:0:0:0:0:ffff:x.x.x.x"
+        String lower = ip.toLowerCase();
+        if (lower.startsWith("::ffff:")) {
+            return ip.substring(7);
+        }
+
+        // Intentar resolver mediante InetAddress por si el SO ya resolvió el mapeo
+        try {
+            InetAddress addr = InetAddress.getByName(ip);
+            if (addr instanceof Inet4Address) {
+                return addr.getHostAddress();
+            }
+            // Para IPv6 puras, devolver la forma canónica comprimida
+            return addr.getHostAddress();
+        } catch (java.net.UnknownHostException e) {
+            // Si no se puede resolver, devolver la ip tal cual
+            return ip;
+        }
     }
 
     @Override
