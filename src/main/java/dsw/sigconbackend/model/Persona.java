@@ -51,4 +51,25 @@ public class Persona {
     @JoinColumn(name = "idubigeo", referencedColumnName = "idubigeo", nullable = true)
     private Ubigeo ubigeo;
 
+    /**
+     * Constructor de copia para crear un snapshot desconectado del contexto de persistencia.
+     * Se usa para capturar el estado anterior antes de un UPDATE, evitando que Hibernate
+     * mute el objeto capturado cuando sincroniza el contexto (First-Level Cache).
+     */
+    public Persona(Persona source) {
+        this.idPersona       = source.idPersona;
+        this.apellidoPaterno = source.apellidoPaterno;
+        this.apellidoMaterno = source.apellidoMaterno;
+        this.nombres         = source.nombres;
+        this.fechaNacimiento = source.fechaNacimiento;
+        this.numDocumento    = source.numDocumento;
+        this.direccion       = source.direccion;
+        this.telefono        = source.telefono;
+        this.createdAt       = source.createdAt;
+        this.updatedAt       = source.updatedAt;
+        this.sexo            = source.sexo;
+        this.tipoDocumento   = source.tipoDocumento;
+        this.ubigeo          = source.ubigeo;
+    }
+
 }

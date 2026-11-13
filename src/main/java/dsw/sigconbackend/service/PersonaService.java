@@ -1,5 +1,6 @@
 package dsw.sigconbackend.service;
 
+import dsw.sigconbackend.auditoria.AuditoriaService;
 import dsw.sigconbackend.dto.NPersonasXTipoDocumento;
 import dsw.sigconbackend.dto.PersonaRequest;
 import dsw.sigconbackend.dto.PersonaResponse;
@@ -27,6 +28,8 @@ public class PersonaService {
     UbigeoRepository ubigeoRepository;
     @Autowired
     SexoRepository sexoRepository;
+    @Autowired
+    AuditoriaService auditoriaService;
     
     public List<PersonaResponse> listPersonas(){
         return PersonaResponse.fromEntities(personaRepository.findAllByOrderByIdPersonaDesc());
@@ -48,30 +51,50 @@ public class PersonaService {
     public PersonaResponse insertPersona(PersonaRequest personaRequest){
         // Reutilizamos el metodo toEntity de PersonaRequest
         Persona persona = PersonaRequest.toEntity(personaRequest);
-        persona.setCreatedAt(java.time.LocalDateTime.now());
-        persona.setUpdatedAt(java.time.LocalDateTime.now());
-
-        persona = personaRepository.saveAndFlush(persona);        
-        PersonaResponse personaResponse = PersonaResponse.fromEntity(persona);        
+        persona = personaRepository.saveAndFlush(persona);
+        // Auditoria: registrar INSERT
+        auditoriaService.registrarCreacion(
+                "public", "persona", persona.getIdPersona().toString(), "Personas");
+        PersonaResponse personaResponse = PersonaResponse.fromEntity(persona);
         return personaResponse;
     } 
     
     @Transactional
     public PersonaResponse updatePersona(PersonaRequest personaRequest){
+        // Capturar estado anterior ANTES de modificar (para auditoria)
+        // Se usa new Persona(snapshot) para desconectarlo del contexto de Hibernate:
+        // sin el constructor de copia, saveAndFlush mutaría también estadoAnterior
+        // porque Hibernate mantiene ambas referencias apuntando al mismo objeto gestionado.
+        Persona estadoAnterior = personaRepository.findById(personaRequest.getIdPersona())
+                .map(Persona::new)   // snapshot desconectado del contexto de persistencia
+                .orElse(null);
+
+
         // Reutilizamos el metodo toEntity de PersonaRequest
         Persona persona = PersonaRequest.toEntity(personaRequest);
-        persona.setCreatedAt(java.time.LocalDateTime.now());
+        persona.setCreatedAt(estadoAnterior.getCreatedAt());
         persona.setUpdatedAt(java.time.LocalDateTime.now());
         persona = personaRepository.saveAndFlush(persona);
+
+        // Auditoria: registrar UPDATE con comparacion de campos
+        auditoriaService.registrarActualizacion(
+                "public", "persona", persona.getIdPersona().toString(), "Personas",
+                estadoAnterior, persona);
+
         PersonaResponse personaResponse = PersonaResponse.fromEntity(persona);
         return personaResponse;
     }   
     
     @Transactional
     public void deletePersona(Long id){
+        // Capturar estado anterior ANTES de eliminar (para auditoria)
+        Persona estadoAnterior = personaRepository.findById(id).orElse(null);
         try {
             personaRepository.deleteById(id);
             personaRepository.flush();
+            // Auditoria: registrar DELETE con el snapshot previo
+            auditoriaService.registrarEliminacion(
+                    "public", "persona", id.toString(), "Personas", estadoAnterior);
         } catch (org.springframework.dao.DataIntegrityViolationException ex) {
             String detail = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
             String userFriendlyMessage = "No se puede eliminar la persona porque se encuentra registrada y referenciada en otras tablas del sistema (ej. propietario).";
